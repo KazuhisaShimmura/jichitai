@@ -6,7 +6,6 @@ from email.utils import parsedate_to_datetime
 from .base import Harvester
 from ..schema import GrantOpportunity
 from ..util.text import normalize_whitespace
-import re
 
 class RssHarvester(Harvester):
     def harvest(self) -> Iterable[GrantOpportunity]:
@@ -23,10 +22,14 @@ class RssHarvester(Harvester):
         for it in items:
             title = (it.findtext("title") or "").strip()
             link = (it.findtext("link") or "").strip()
+            # descriptionはキーワードフィルタリングにのみ使用し、保存はしない
             desc = normalize_whitespace(it.findtext("description") or "")
-            if include_patterns and not any(re.search(p, title+desc) for p in include_patterns):
+            
+            # キーワードフィルタリング (タイトルとdescriptionの両方を対象)
+            text_to_check = title + " " + desc
+            if include_patterns and not any(re.search(p, text_to_check) for p in include_patterns):
                 continue
-            if exclude_patterns and any(re.search(p, title+desc) for p in exclude_patterns):
+            if exclude_patterns and any(re.search(p, text_to_check) for p in exclude_patterns):
                 continue
 
             published_at_str = it.findtext("pubDate") or it.findtext("{http://purl.org/dc/elements/1.1/}date")
@@ -54,8 +57,7 @@ class RssHarvester(Harvester):
                 fetched_at=datetime.now(timezone.utc).isoformat(),
                 raw=None # Do not store raw data
             )
-            # classify
-            # Classify by title only, as summary is not stored.
+            # classify by title only
             cat = self.classifier(opp.title)
             opp.category = cat
             yield opp
