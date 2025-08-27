@@ -58,7 +58,7 @@ class RssHarvester(Harvester):
                 fetched_at=datetime.now(timezone.utc).isoformat(),
                 raw=None # Do not store raw data
             )
-            # classify by title only
-            cat = self.classifier(opp.title)
+            # Classify using both title and description for better accuracy
+            cat = self.classifier(text_to_check)
             opp.category = cat
             yield opp

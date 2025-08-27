@@ -44,12 +44,11 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
         if not Harv:
             print(f"[WARN] unknown harvester type: {typ}")
             continue
+
+        print(f"[INFO] Harvesting from source: {src.get('issuer_name', typ)}")
         harvester = Harv(fetcher, classifier, src)
-        try:
-            for opp in harvester.harvest():
-                results.append(opp)
-        except Exception as e:
-            print(f"[ERROR] {typ} failed for {src.get('name','(no name)')}: {e}")
+        for opp in harvester.harvest():
+            results.append(opp)
 
     # Deduplicate by URL + title
     seen = set()

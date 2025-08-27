@@ -51,20 +51,24 @@ def main():
     exclude_pat = re.compile(r"(審査結果|結果公表|交付決定|終了|募集終了|中止|完了|取消|停止)")
 
     # Find relevant columns dynamically
-    title_col = find_column(df, ["title", "補助金名", "名称", "件名", "Title"]) or df.columns[0]
+    title_col = find_column(df, ["title", "補助金名", "名称", "件名", "Title"])
+    if not title_col:
+        print("エラー: 'title'に相当する列（例: 「補助金名」「名称」）が見つかりませんでした。入力CSVファイルを確認してください。")
+        return
     summary_col = find_column(df, ["summary", "概要", "説明", "description"])
 
-    # Filter rows based on title and summary
-    def is_subsidy(row):
-        text = str(row.get(title_col, ""))
-        if summary_col and pd.notna(row.get(summary_col)):
-            text += " " + str(row.get(summary_col, ""))
-        
-        if subsidy_pat.search(text) and not exclude_pat.search(text):
-            return True
-        return False
+    # --- Filtering ---
+    # Combine title and summary for searching. This is more efficient than iterating row by row.
+    text_to_search = df[title_col].astype(str)
+    if summary_col:
+        # .fillna('') handles cases where the summary column has empty values.
+        text_to_search += " " + df[summary_col].fillna('').astype(str)
 
-    df_sub = df[df.apply(is_subsidy, axis=1)].copy()
+    # Use vectorized string operations which are significantly faster than df.apply().
+    is_subsidy_mask = text_to_search.str.contains(subsidy_pat, regex=True, na=False)
+    is_excluded_mask = text_to_search.str.contains(exclude_pat, regex=True, na=False)
+
+    df_sub = df[is_subsidy_mask & ~is_excluded_mask].copy()
     print(f"Found {len(df_sub)} subsidy/grant records.")
 
     if df_sub.empty:
@@ -82,7 +86,7 @@ def main():
 
     # Build the new DataFrame in a pandas-idiomatic way
     df_ja = pd.DataFrame({
-        "補助金名": df_sub[title_col] if title_col and title_col in df_sub.columns else "",
+        "補助金名": df_sub[title_col],  # title_col is guaranteed to exist due to the check above
         "補助金上限額": df_sub[amount_col] if amount_col and amount_col in df_sub.columns else "",
         "補助率": df_sub[rate_col] if rate_col and rate_col in df_sub.columns else "",
         "対象地域": df_sub[issuer_col] if issuer_col and issuer_col in df_sub.columns else "",
