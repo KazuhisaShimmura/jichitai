@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Iterable
+from email.utils import parsedate_to_datetime
 from .base import Harvester
 from ..schema import GrantOpportunity
 from ..util.text import normalize_whitespace
@@ -28,6 +29,14 @@ class RssHarvester(Harvester):
             if exclude_patterns and any(re.search(p, title+desc) for p in exclude_patterns):
                 continue
 
+            published_at_str = it.findtext("pubDate") or it.findtext("{http://purl.org/dc/elements/1.1/}date")
+            published_at_dt = None
+            if published_at_str:
+                try:
+                    published_at_dt = parsedate_to_datetime(published_at_str)
+                except Exception:
+                    published_at_dt = None
+
             opp = GrantOpportunity(
                 title=title,
                 url=link or url,
@@ -41,7 +50,7 @@ class RssHarvester(Harvester):
                 amount=None, # Do not parse from RSS description
                 subsidy_rate=None, # Do not parse from RSS description
                 source_type="RSS",
-                published_at=None,
+                published_at=published_at_dt.isoformat() if published_at_dt else None,
                 fetched_at=datetime.now(timezone.utc).isoformat(),
                 raw=None # Do not store raw data
             )

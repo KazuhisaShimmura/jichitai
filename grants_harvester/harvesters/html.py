@@ -3,6 +3,8 @@ import re
 from urllib.parse import urljoin
 from datetime import datetime, timezone
 from typing import Iterable
+from email.utils import parsedate_to_datetime
+from bs4 import BeautifulSoup
 from .base import Harvester
 from ..schema import GrantOpportunity
 from ..util.text import normalize_whitespace, parse_date_range, extract_money, extract_rate
@@ -18,11 +20,21 @@ class HtmlHarvester(Harvester):
                 continue
             resp.raise_for_status()
             html = resp.text
-            page_title = self._extract_title(html) or base_url
-            text = normalize_whitespace(self._extract_text(html))
+            soup = BeautifulSoup(html, 'html.parser')
+            page_title = self._extract_title(soup) or base_url
+            text = self._extract_text(soup)
 
             # 1) Emit page itself if it matches
             if self._matches(text + " " + page_title, incl, excl):
+                start, end = parse_date_range(text)
+
+                published_at = None
+                if resp.headers.get("Last-Modified"):
+                    try:
+                        published_at = parsedate_to_datetime(resp.headers.get("Last-Modified")).isoformat()
+                    except Exception:
+                        pass
+
                 opp = GrantOpportunity(
                     title=page_title.strip(),
                     url=base_url,
@@ -31,12 +43,12 @@ class HtmlHarvester(Harvester):
                     region_code=self.config.get("region_code"),
                     category=None,
                     summary=(text[:500] + "…") if len(text) > 500 else text,
-                    application_start=None,
-                    application_end=None,
+                    application_start=start,
+                    application_end=end,
                     amount=extract_money(text),
                     subsidy_rate=extract_rate(text),
                     source_type="HTML",
-                    published_at=None,
+                    published_at=published_at,
                     fetched_at=datetime.now(timezone.utc).isoformat(),
                     raw={"html_len": len(html)},
                 )
@@ -44,7 +56,7 @@ class HtmlHarvester(Harvester):
                 yield opp
 
             # 2) Extract <a> links whose text matches include_patterns
-            for (href, anchor_text) in self._extract_links(html):
+            for (href, anchor_text) in self._extract_links(soup):
                 if not href:
                     continue
                 full = urljoin(base_url, href)
@@ -77,26 +89,24 @@ class HtmlHarvester(Harvester):
             return False
         return True
 
-    def _extract_title(self, html: str):
-        m = re.search(r"<title>(.*?)</title>", html, flags=re.IGNORECASE|re.DOTALL)
-        if m:
-            return re.sub(r"\s+", " ", m.group(1)).strip()
-        h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, flags=re.IGNORECASE|re.DOTALL)
-        return re.sub(r"\s+", " ", h1.group(1)).strip() if h1 else None
+    def _extract_title(self, soup: BeautifulSoup):
+        if soup.title and soup.title.string:
+            return normalize_whitespace(soup.title.string)
+        h1 = soup.find('h1')
+        if h1:
+            return normalize_whitespace(h1.get_text())
+        return None
 
-    def _extract_text(self, html: str):
-        text = re.sub(r"(?is)<script.*?>.*?</script>", "", html)
-        text = re.sub(r"(?is)<style.*?>.*?</style>", "", text)
-        text = re.sub(r"(?is)<[^>]+>", " ", text)
-        return text
+    def _extract_text(self, soup: BeautifulSoup):
+        for script_or_style in soup(["script", "style"]):
+            script_or_style.decompose()
+        return normalize_whitespace(soup.get_text())
 
-    def _extract_links(self, html: str):
-        # Very simple anchor extractor
-        anchors = re.findall(r'<a\s+[^>]*href="([^"]+)"[^>]*>(.*?)</a>', html, flags=re.IGNORECASE|re.DOTALL)
+    def _extract_links(self, soup: BeautifulSoup):
         cleaned = []
-        for href, inner in anchors:
-            # Remove tags inside anchor
-            t = re.sub(r"(?is)<[^>]+>", " ", inner)
-            t = re.sub(r"\s+", " ", t).strip()
-            cleaned.append((href, t))
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            text = normalize_whitespace(a.get_text())
+            if href:
+                cleaned.append((href, text))
         return cleaned

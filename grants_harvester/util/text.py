@@ -37,15 +37,21 @@ def parse_jp_date(text: str) -> Optional[date]:
             return None
 
     # Japanese era
-    m = re.search(r"(令和|平成|昭和)\s*(\d{1,2})年\s*(\d{1,2})月\s*(\d{1,2})日?", text)
+    m = re.search(r"(令和|平成|昭和)\s*(\d{1,2}|元)年\s*(\d{1,2})月\s*(\d{1,2})日?", text)
     if m:
-        era, yy, mo, dd = m.groups()
-        y = _jp_era_to_year(era, int(yy))
+        era, yy_str, mo, dd = m.groups()
+        yy = 1 if yy_str == '元' else int(yy_str)
+        y = _jp_era_to_year(era, yy)
         try:
             return date(y, int(mo), int(dd))
         except ValueError:
             return None
     return None
+
+DATE_RANGE_KEYWORDS = [
+    "募集期間", "申請期間", "受付期間", "応募期間", "申込期間",
+    "公募期間", "実施期間", "申請受付", "受付開始", "申請開始"
+]
 
 def parse_date_range(text: str):
     """
@@ -53,14 +59,37 @@ def parse_date_range(text: str):
     Handles '2025年4月1日～2025年5月31日', '～2025年5月31日まで'.
     """
     if not text: return (None, None)
-    # Full dates both ends
-    m = re.search(r"(?P<s>(?:令和|平成|昭和)?\s*\d{1,4}年\s*\d{1,2}月\s*\d{1,2}日?)\s*[～~\-から〜]\s*(?P<e>(?:令和|平成|昭和)?\s*\d{1,4}年\s*\d{1,2}月\s*\d{1,2}日?)", text)
+
+    keyword_pattern = "|".join(DATE_RANGE_KEYWORDS)
+    date_pattern_text = r"((?:令和|平成|昭和)?\s*(?:\d{1,4}|元)年\s*\d{1,2}月\s*\d{1,2}日?)"
+
+    # パターン1: 「キーワード 日付1 から 日付2 まで」
+    m = re.search(
+        rf"({keyword_pattern})\s*[:：]?\s*(?P<s>{date_pattern_text})\s*[～〜\-から]\s*(?P<e>{date_pattern_text})", text
+    )
     if m:
-        s = parse_jp_date(m.group('s'))
-        e = parse_jp_date(m.group('e'))
+        s = parse_jp_date(m.group("s"))
+        e = parse_jp_date(m.group("e"))
         return (s.isoformat() if s else None, e.isoformat() if e else None)
-    # Only end date '...まで'
-    m = re.search(r"(?P<e>(?:令和|平成|昭和)?\s*\d{1,4}年\s*\d{1,2}月\s*\d{1,2}日?)\s*まで", text)
+
+    # パターン2: 「キーワード 日付 から」
+    m = re.search(rf"({keyword_pattern})\s*[:：]?\s*(?P<s>{date_pattern_text})\s*(?:から|より|開始)", text)
+    if m:
+        s = parse_jp_date(m.group("s"))
+        return (s.isoformat() if s else None, None)
+
+    # パターン3: 「キーワード ～ 日付 まで」
+    m = re.search(rf"({keyword_pattern})?\s*[:：]?\s*[～〜]\s*(?P<e>{date_pattern_text})\s*(?:まで|締切|必着)", text)
+    if m:
+        e = parse_jp_date(m.group("e"))
+        return (None, e.isoformat() if e else None)
+
+    # 既存のキーワードなしパターンも残す
+    m = re.search(r"(?P<s>" + date_pattern_text + r")\s*[～~\-から〜]\s*(?P<e>" + date_pattern_text + r")", text)
+    if m:
+        s, e = parse_jp_date(m.group('s')), parse_jp_date(m.group('e'))
+        return (s.isoformat() if s else None, e.isoformat() if e else None)
+    m = re.search(r"(?P<e>" + date_pattern_text + r")\s*まで", text)
     if m:
         e = parse_jp_date(m.group('e'))
         return (None, e.isoformat() if e else None)

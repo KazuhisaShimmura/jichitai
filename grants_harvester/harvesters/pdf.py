@@ -23,7 +23,7 @@ class PdfHarvester(Harvester):
                 text = None
 
             summary = normalize_whitespace((text or "")) if text else None
-            start, end = parse_date_range(summary or "")
+            start, end = parse_date_range(summary or "") # 全文テキストから期間を抽出
             opp = GrantOpportunity(
                 title=self.config.get("title_hint") or "(PDF) " + u.split("/")[-1],
                 url=u,
@@ -31,7 +31,7 @@ class PdfHarvester(Harvester):
                 issuer_level=self.config.get("issuer_level"),
                 region_code=self.config.get("region_code"),
                 category=None,
-                summary=(summary[:500] + "…") if summary and len(summary) > 500 else summary,
+                summary=(summary[:500] + "…") if summary and len(summary) > 500 else summary, # 要約は切り詰める
                 application_start=start,
                 application_end=end,
                 amount=extract_money(summary or ""),
