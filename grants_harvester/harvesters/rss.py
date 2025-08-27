@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Iterable
 from .base import Harvester
 from ..schema import GrantOpportunity
-from ..util.text import normalize_whitespace, parse_date_range, extract_money, extract_rate
+from ..util.text import normalize_whitespace
 import re
 
 class RssHarvester(Harvester):
@@ -28,25 +28,25 @@ class RssHarvester(Harvester):
             if exclude_patterns and any(re.search(p, title+desc) for p in exclude_patterns):
                 continue
 
-            start, end = parse_date_range(desc)
             opp = GrantOpportunity(
                 title=title,
                 url=link or url,
                 issuer_name=self.config.get("issuer_name"),
                 issuer_level=self.config.get("issuer_level"),
                 region_code=self.config.get("region_code"),
-                category=None,  # filled by classifier
-                summary=desc or None,
-                application_start=start,
-                application_end=end,
-                amount=extract_money(desc),
-                subsidy_rate=extract_rate(desc),
+                category=None,  # filled by classifier later
+                summary=None,  # Do not store description from RSS
+                application_start=None, # Do not parse from RSS description
+                application_end=None, # Do not parse from RSS description
+                amount=None, # Do not parse from RSS description
+                subsidy_rate=None, # Do not parse from RSS description
                 source_type="RSS",
                 published_at=None,
                 fetched_at=datetime.now(timezone.utc).isoformat(),
-                raw={"rss_description": it.findtext("description")}
+                raw=None # Do not store raw data
             )
             # classify
-            cat = self.classifier(opp.title + " " + (opp.summary or ""))
+            # Classify by title only, as summary is not stored.
+            cat = self.classifier(opp.title)
             opp.category = cat
             yield opp

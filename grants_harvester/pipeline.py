@@ -78,8 +78,8 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
         out_csv_ja = os.path.join(out_dir, f"grants_{ts}_ja.csv")
         with open(out_csv_ja, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.writer(f)
-            # Columns: 補助金名, 補助金上限額, 補助率, 対象地域, 従業員数の上限, 募集期間, 詳細URL
-            w.writerow(["補助金名","補助金上限額","補助率","対象地域","従業員数の上限","募集期間","詳細URL"])
+            # Columns: 補助金名, 補助金上限額, 補助率, 対象地域, 従業員数の上限, 募集期間, 詳細URL, 取得日時
+            w.writerow(["補助金名","補助金上限額","補助率","対象地域","従業員数の上限","募集期間","詳細URL", "取得日時"])
             for r in deduped:
                 period = None
                 if r.application_start or r.application_end:
@@ -94,7 +94,8 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
                     r.issuer_name or "",
                     "",  # 従業員数の上限は未取得のため空欄
                     period or "",
-                    r.url or ""
+                    r.url or "",
+                    r.fetched_at or ""
                 ])
     except Exception as e:
         print("[WARN] JA CSV export failed:", e)
