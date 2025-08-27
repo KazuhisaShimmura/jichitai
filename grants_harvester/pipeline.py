@@ -72,6 +72,7 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
 
     # also write JA CSV matching user's format
     try:
+        out_csv_ja = None
         import csv
         out_csv_ja = os.path.join(out_dir, f"grants_{ts}_ja.csv")
         with open(out_csv_ja, "w", encoding="utf-8-sig", newline="") as f:
@@ -96,7 +97,9 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
                     r.fetched_at or ""
                 ])
     except Exception as e:
+        out_csv_ja = None
         print("[WARN] JA CSV export failed:", e)
+    out_csv = None
     try:
         import csv
         out_csv = os.path.join(out_dir, f"grants_{ts}.csv")
@@ -108,6 +111,19 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
                 w.writerow([r.title, r.url, r.issuer_name, r.issuer_level, r.region_code, r.category,
                             r.application_start, r.application_end, r.amount, r.subsidy_rate, r.published_at, r.fetched_at])
     except Exception as e:
+        out_csv = None
         print("[WARN] CSV export failed:", e)
+
+    # Create 'latest' copies for easy access
+    try:
+        import shutil
+        shutil.copyfile(out_jsonl, os.path.join(out_dir, "grants_latest.jsonl"))
+        if out_csv_ja:
+            shutil.copyfile(out_csv_ja, os.path.join(out_dir, "grants_latest_ja.csv"))
+        if out_csv:
+            shutil.copyfile(out_csv, os.path.join(out_dir, "grants_latest.csv"))
+        print("Created 'latest' copies of the output files.")
+    except Exception as e:
+        print(f"[WARN] Could not create 'latest' copies: {e}")
 
     return out_jsonl
