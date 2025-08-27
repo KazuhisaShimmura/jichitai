@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 22 * * *' # 毎日 22:00 UTC (日本時間 午前7時) に実行
 
+permissions:
+  contents: write
+
 jobs:
   harvest:
     runs-on: ubuntu-latest
@@ -33,6 +36,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run harvester
+        env:
+          HARVESTER_UA: "Eucalia-GrantsHarvester/1.0 (+${{ secrets.HARVESTER_EMAIL }})"
         run: python run.py --sources config/sources.yaml --keywords config/keywords.yaml --out out
 
       - name: Commit and push if there are changes
