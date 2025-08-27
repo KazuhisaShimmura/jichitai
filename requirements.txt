@@ -1,0 +1,5 @@
+requests
+pyyaml
+pdfminer.six
+beautifulsoup4
+readability-lxml

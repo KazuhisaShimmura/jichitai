@@ -1,0 +1,48 @@
+name: Daily Grants Harvester
+
+on:
+  workflow_dispatch: # 手動実行を許可
+  schedule:
+    - cron: '0 22 * * *' # 毎日 22:00 UTC (日本時間 午前7時) に実行
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache dependencies and harvester cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            .cache/harvester
+          key: ${{ runner.os }}-cache-${{ hashFiles('**/requirements.txt') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cache-${{ hashFiles('**/requirements.txt') }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run harvester
+        run: python run.py --sources config/sources.yaml --keywords config/keywords.yaml --out out
+
+      - name: Commit and push if there are changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add out/ .cache/harvester/etag_index.json
+          if ! git diff --staged --quiet; then
+            git commit -m "Update grants data on $(date -u +"%Y-%m-%d")"
+            git push
+          else
+            echo "No changes to commit."
+          fi

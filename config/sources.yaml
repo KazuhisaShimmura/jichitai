@@ -1,0 +1,95 @@
+
+min_interval_sec: 1.0
+
+sources:
+  # --- RSS（参考：主力は東京都/神奈川県の新着） ---
+  - type: rss
+    name: "東京都 公式新着RSS"
+    url: "https://www.metro.tokyo.lg.jp/index.html/-/asset_publisher/knkg/rss"
+    issuer_name: "東京都"
+    issuer_level: "prefecture"
+    region_code: "13"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    exclude_patterns: ["結果|終了|中止|募集終了"]
+
+  - type: rss
+    name: "神奈川県 公式新着RSS"
+    url: "https://www.pref.kanagawa.jp/prs/list.xml"
+    issuer_name: "神奈川県"
+    issuer_level: "prefecture"
+    region_code: "14"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    exclude_patterns: ["結果|終了|中止|募集終了"]
+
+  - type: rss
+    name: "東京都 がんポータル RSS"
+    url: "https://www.gan-portal.metro.tokyo.lg.jp/rss/"
+    issuer_name: "東京都（がんポータル）"
+    issuer_level: "agency"
+    region_code: "13"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    exclude_patterns: ["結果|終了|中止|募集終了"]
+
+  # --- SITEMAP（新規URL候補の拾い上げ） ---
+  - type: sitemap
+    name: "東京都 福祉局 サイトマップ"
+    url: "https://www.fukushi.metro.tokyo.lg.jp"
+    issuer_name: "東京都福祉局"
+    issuer_level: "agency"
+    region_code: "13"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    exclude_patterns: ["結果|終了|訂正|FAQ|Q&A"]
+
+  - type: sitemap
+    name: "神奈川県 サイトマップ"
+    url: "https://www.pref.kanagawa.jp/sitemap_base.xml"
+    issuer_name: "神奈川県"
+    issuer_level: "prefecture"
+    region_code: "14"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    exclude_patterns: ["結果|終了|訂正|FAQ|Q&A"]
+
+  # --- HTML（公式RSS以外の“特定サイト巡回”の中心） ---
+  # 東京都 保健医療局（医療機関向け支援ハブ＋DX・生産性向上等）
+  - type: html
+    name: "東京都 保健医療局｜民間医療機関向け 補助金まとめ"
+    issuer_name: "東京都保健医療局"
+    issuer_level: "agency"
+    region_code: "13"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    urls:
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/iryo/jigyo/h_gaiyou"
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/iryo/iryo_hoken/iryodigital"
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/iryo/jigyo/h_gaiyou/dx_zinzai"
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/iryo/jigyo/productivity"
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/iryo/jigyo/h_gaiyou/iryo-bukka"
+      - "https://www.hokeniryo.metro.tokyo.lg.jp/kansen/iryokikan/kyouteihojyokin"
+
+  # 東京都 福祉局（介護・高齢分野の特定ページ）
+  - type: html
+    name: "東京都 福祉局｜介護・高齢分野 主要ページ"
+    issuer_name: "東京都福祉局"
+    issuer_level: "agency"
+    region_code: "13"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    urls:
+      - "https://www.fukushi.metro.tokyo.lg.jp/kourei/hoken/chiiki"            # 地域を支える「訪問介護」応援事業
+      - "https://www.fukushi.metro.tokyo.lg.jp/kourei/hoken/homonkaigosaiyooen" # 訪問介護採用応援事業
+      - "https://www.fukushi.metro.tokyo.lg.jp/kourei/hoken/jinzai"             # 介護人材関連事業
+
+  # 神奈川県（医療・介護カテゴリ索引＋個別制度）
+  - type: html
+    name: "神奈川県｜医療・介護カテゴリ索引＋個別制度"
+    issuer_name: "神奈川県"
+    issuer_level: "prefecture"
+    region_code: "14"
+    include_patterns: ["(医療|病院|医療機関|診療|介護|看護|高齢者|ケア|AI|IT|DX|働き方|働く|リスキリング|補助金|助成|募集|公募)"]
+    urls:
+      - "https://www.pref.kanagawa.jp/menu/2/6/index.html"      # 医療（索引）
+      - "https://www.pref.kanagawa.jp/menu/2/9/index.html"      # 介護・高齢者（索引）
+      - "https://www.pref.kanagawa.jp/menu/2/6/31/index.html"   # 医療政策（索引）
+      - "https://www.pref.kanagawa.jp/menu/2/9/48/index.html"   # 高齢化社会の福祉政策
+      - "https://www.pref.kanagawa.jp/docs/u6s/cnt/f420373/p1075201.html" # 介護ロボット・ICT導入支援
+      - "https://www.pref.kanagawa.jp/docs/n7j/kikin-kaigo.html"          # 地域医療介護総合確保（介護分）
+      - "https://www.pref.kanagawa.jp/docs/f6z/cnt/r8idea.html"           # 医療分の事業提案募集（年度）
+
