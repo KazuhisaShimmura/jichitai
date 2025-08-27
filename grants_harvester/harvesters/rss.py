@@ -1,5 +1,6 @@
 
 import xml.etree.ElementTree as ET
+import re
 from datetime import datetime, timezone
 from typing import Iterable
 from email.utils import parsedate_to_datetime
