@@ -47,13 +47,8 @@ def run_pipeline(config_path: str, keywords_path: str, out_dir: str) -> str:
 
         print(f"[INFO] Harvesting from source: {src.get('issuer_name', typ)}")
         harvester = Harv(fetcher, classifier, src)
-        try:
-            for opp in harvester.harvest():
-                results.append(opp)
-        except Exception as e:
-            # エラーを記録し、次のソースの処理を継続する
-            source_name = src.get('name', src.get('url', typ))
-            print(f"[ERROR] Failed to harvest from '{source_name}': {e}")
+        for opp in harvester.harvest():
+            results.append(opp)
 
     # Deduplicate by URL + title
     seen = set()
