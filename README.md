@@ -8,10 +8,9 @@ APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を
 
 ## 使い方（ローカル）
 
-1. Python 3.10+ を用意し、必要パッケージをインストール：
+1. Python 3.10+ を用意し、`requirements.txt` を使って必要パッケージをインストールします。
    ```bash
-   pip install requests pyyaml pdfminer.six
-   # （必要に応じて）pip install beautifulsoup4 readability-lxml
+   pip install -r requirements.txt
    ```
 
 2. `config/sources.yaml` に収集対象を追記します（後述）。
@@ -22,6 +21,14 @@ APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を
    ```
 
 4. 出力：`out/grants_*.jsonl`（1行1レコード）と `out/grants_*.csv`。
+
+## 自動更新（GitHub Actions）
+
+このリポジトリは、GitHub Actionsを利用して毎日自動で情報を収集・更新するように設定されています。
+
+- **スケジュール**: 毎日午前7時（日本時間）に実行されます。
+- **処理内容**: `run.py` を実行し、新しい情報が見つかった場合は `out/` ディレクトリとキャッシュファイルを自動でコミット＆プッシュします。
+- **設定ファイル**: `.github/workflows/update_grants.yml`
 
 ## 拡張方法
 
@@ -51,7 +58,10 @@ APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を
 
 ## 設計メモ
 
-- `util/fetch.py`：ETag / Last-Modified による差分取得。`GRANTS_CACHE_DIR` でキャッシュ先変更可。
+- **差分取得**: `util/fetch.py` は、サーバ負荷を軽減するため ETag / Last-Modified ヘッダを利用した差分取得に対応しています。キャッシュは `.cache/` ディレクトリに保存されます。
+- **User-Agent**: クローラの身元を明示するため、`util/fetch.py` 内で連絡先を含むUser-Agent（`Eucalia-GrantsHarvester/1.0 (+kazuhisa.shimmura@eucalia.jp)`）を設定しています。
 - `include_patterns / exclude_patterns`：正規表現でフィルタ（日本語OK）。
 - `issuer_level`：`prefecture|municipality|national|agency` など自由に運用可能。
-
+- **収集方針**: 著作権や元サイトへの配慮から、本クローラは「発見と導線」に徹します。
+  - **RSS**: 新規情報の「検知」にのみ利用し、タイトルとURLのみを保存します。本文や募集期間などの詳細は保存しません。
+  - **HTML/PDF**: ページ内から関連キーワードに合致するリンクを抽出します。詳細情報はリンク先の元サイトで確認することを前提としています。
