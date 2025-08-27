@@ -1,7 +1,7 @@
 {
   "https://www.metro.tokyo.lg.jp/index.html/-/asset_publisher/knkg/rss": {},
   "https://www.pref.kanagawa.jp/prs/list.xml": {
-    "last_modified": "Tue, 26 Aug 2025 08:00:33 GMT"
+    "last_modified": "Wed, 27 Aug 2025 08:01:04 GMT"
   },
   "https://www.gan-portal.metro.tokyo.lg.jp/rss/": {},
   "https://www.fukushi.metro.tokyo.lg.jp/sitemap.xml": {},
@@ -37,5 +37,9 @@
   },
   "https://www.pref.kanagawa.jp/docs/f6z/cnt/r8idea.html": {
     "last_modified": "Wed, 06 Aug 2025 04:00:08 GMT"
+  },
+  "https://www.fukushi.metro.tokyo.lg.jp": {},
+  "https://www.pref.kanagawa.jp/sitemap_base.xml": {
+    "last_modified": "Tue, 26 Aug 2025 16:15:06 GMT"
   }
 }
