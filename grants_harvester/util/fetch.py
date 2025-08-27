@@ -3,7 +3,11 @@ import time, os, json
 from typing import Optional, Dict
 import requests
 
-DEFAULT_UA = "Eucalia-GrantsHarvester/1.0 (+kazuhisa.shimmura@eucalia.jp)"
+# 環境変数 HARVESTER_UA が設定されていればそれを使い、なければ汎用的なUAを使う
+# 運用時は環境変数で連絡先を設定することを推奨
+DEFAULT_UA = os.environ.get(
+    "HARVESTER_UA",
+    "GrantsHarvester/1.0 (+https://github.com/KazuhisaShimmura/jichitai)")
 CACHE_DIR = os.environ.get("GRANTS_CACHE_DIR", ".cache/harvester")
 os.makedirs(CACHE_DIR, exist_ok=True)
 ETAG_DB = os.path.join(CACHE_DIR, "etag_index.json")

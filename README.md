@@ -1,7 +1,7 @@
 
 # Grants Harvester（自治体・医療/介護/DX向け）
 
-APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を組み合わせて
+APIが無いサイトでも **RSS / サイトマップ / HTML / PDF** を組み合わせて
 補助金・助成金・公募情報を自動収集するための最小フレームワークです。
 
 > ⚠️ 実運用では各サイトの利用規約・robots.txtを遵守し、レート制限や並列度を適切に設定してください。
@@ -33,7 +33,7 @@ APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を
 ## 拡張方法
 
 - **収集先を増やす**：`config/sources.yaml` の `sources:` 配列に辞書を追加
-  - `type: rss|ckan|sitemap|html|pdf`
+  - `type: rss|sitemap|html|pdf`
   - 例：
     ```yaml
     - type: rss
@@ -59,7 +59,7 @@ APIが無いサイトでも **RSS / CKAN / サイトマップ / HTML / PDF** を
 ## 設計メモ
 
 - **差分取得**: `util/fetch.py` は、サーバ負荷を軽減するため ETag / Last-Modified ヘッダを利用した差分取得に対応しています。キャッシュは `.cache/` ディレクトリに保存されます。
-- **User-Agent**: クローラの身元を明示するため、`util/fetch.py` 内で連絡先を含むUser-Agent（`Eucalia-GrantsHarvester/1.0 (+kazuhisa.shimmura@eucalia.jp)`）を設定しています。
+- **User-Agent**: クローラの身元を明示するため、連絡先を含むUser-Agentを設定することを推奨します。本リポジトリでは、GitHub Actions実行時に環境変数経由で安全に設定する仕組みを採用しています。
 - `include_patterns / exclude_patterns`：正規表現でフィルタ（日本語OK）。
 - `issuer_level`：`prefecture|municipality|national|agency` など自由に運用可能。
 - **収集方針**: 著作権や元サイトへの配慮から、本クローラは「発見と導線」に徹します。

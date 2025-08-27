@@ -8,14 +8,12 @@ from .util.fetch import HttpFetcher
 from .util.classify import choose_category
 
 from .harvesters.rss import RssHarvester
-from .harvesters.ckan import CkanHarvester
 from .harvesters.sitemap import SitemapHarvester
 from .harvesters.html import HtmlHarvester
 from .harvesters.pdf import PdfHarvester
 
 HARVESTER_REGISTRY = {
     "rss": RssHarvester,
-    "ckan": CkanHarvester,
     "sitemap": SitemapHarvester,
     "html": HtmlHarvester,
     "pdf": PdfHarvester,
