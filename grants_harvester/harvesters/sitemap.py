@@ -7,9 +7,8 @@ from ..schema import GrantOpportunity
 
 class SitemapHarvester(Harvester):
     def harvest(self) -> Iterable[GrantOpportunity]:
-        base = self.config["url"].rstrip("/")
-        sm_url = base + "/sitemap.xml"
-        resp = self.fetcher.get(sm_url)
+        sitemap_url = self.config["url"]
+        resp = self.fetcher.get(sitemap_url)
         if resp.status_code == 304:
             return []
         resp.raise_for_status()
