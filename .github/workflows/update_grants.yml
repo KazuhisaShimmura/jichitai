@@ -26,7 +26,7 @@ jobs:
           path: |
             ~/.cache/pip
             .cache/harvester
-          key: ${{ runner.os }}-cache-${{ hashFiles('**/requirements.txt') }}-${{ github.run_id }}
+          key: ${{ runner.os }}-cache-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-cache-${{ hashFiles('**/requirements.txt') }}-
 
@@ -39,6 +39,9 @@ jobs:
         env:
           HARVESTER_UA: "Eucalia-GrantsHarvester/1.0 (+${{ secrets.HARVESTER_EMAIL }})"
         run: python run.py --sources config/sources.yaml --keywords config/keywords.yaml --out out
+
+      - name: Run subsidy filter
+        run: python filter_subsidy.py --in out/grants_latest.csv --out out/filtered_latest.csv --out-ja out/filtered_latest_ja.csv
 
       - name: Commit and push if there are changes
         run: |
